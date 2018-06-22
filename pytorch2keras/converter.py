@@ -213,7 +213,27 @@ def pytorch_to_keras(model, args, input_shape,
         # convert_all_kernels_in_model(model)
 
         # Set the weights into the model with new ordering
-        src_weights = [layer.get_weights() for layer in model.layers]
+        # `Dense` layers after `Flatten` have their weights transposed.
+        src_weights = []
+        last_was_flatten = False
+        last_shape = None
+        for layer in model.layers:
+            W = layer.get_weights()
+            if last_was_flatten and W:
+                assert len(last_shape) == 3, str(last_shape)
+                A, b = W
+                _, C, H = last_shape
+                A.shape = (C, H, -1)
+                A = np.ascontiguousarray(np.swapaxes(A, 0, 1))
+                A.shape = (H*C, -1)
+                W = [A, b]
+                last_was_flatten = False
+            if isinstance(layer, keras.layers.core.Flatten):
+                last_was_flatten = True
+            elif not last_was_flatten:
+                last_shape = layer.output_shape
+            src_weights.append(W)
+
         if K.backend() == 'tensorflow':
             # Tensorflow needs a new graph for the converted model
             # to retain the same scopes for the operators.
