@@ -90,11 +90,9 @@ def pytorch_to_keras(model, args, input_shape,
     trace.set_graph(_optimize_graph(trace.graph(), False))
 
     if verbose:
-        print("trace.graph()")
         print(trace.graph())
 
     if verbose:
-        print("trace.graph().outputs())")
         print(list(trace.graph().outputs()))
 
     # Get all graph nodes

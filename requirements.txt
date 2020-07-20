@@ -1,2 +1,2 @@
-keras
-numpy
+tensorflow>=1.0,<2.0
+keras>=2.1
